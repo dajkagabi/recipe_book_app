@@ -1,4 +1,4 @@
-//Classok, API- hívás
+//Classok, amik a recept adatokat tárolják
 
 class Recipe {
   final String id;
@@ -15,6 +15,16 @@ class Recipe {
     required this.ingredients,
   });
 
+  factory Recipe.fromCategoryJson(Map<String, dynamic> json) {
+    return Recipe(
+      id: json['idMeal'] ?? '',
+      title: json['strMeal'] ?? 'Ismeretlen recept',
+      thumbnail: json['strMealThumb'] ?? '',
+      instructions: '',
+      ingredients: [],
+    );
+  }
+
   factory Recipe.fromJson(Map<String, dynamic> json) {
     List<String> ingredients = [];
     for (int i = 1; i <= 20; i++) {
@@ -25,8 +35,8 @@ class Recipe {
     }
 
     return Recipe(
-      id: json['idMeal'],
-      title: json['strMeal'],
+      id: json['idMeal'] ?? '',
+      title: json['strMeal'] ?? 'Névtelen recept',
       thumbnail: json['strMealThumb'] ?? '',
       instructions: json['strInstructions'] ?? '',
       ingredients: ingredients,

@@ -1,8 +1,7 @@
-//
 import 'package:flutter/material.dart';
 import '../models/recipe.dart';
-import '../widgets/recipe_card.dart';
 import '../service/api_service.dart';
+import '../widgets/recipe_card.dart';
 import 'recipe_detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -14,26 +13,47 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   List<Recipe> recipes = [];
-  String searchQuery = 'chicken'; // kezdeti keresés
+  List<String> categories = [];
+  String selectedCategory = 'Beef';
+
+  bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _loadRecipes();
+    _initLoad();
   }
 
-  Future<void> _loadRecipes() async {
-    final result = await ApiService.fetchRecipes(searchQuery);
+  Future<void> _initLoad() async {
+    final cats = await ApiService.fetchCategories();
+    final recs = await ApiService.fetchRecipesByCategory(selectedCategory);
     setState(() {
-      recipes = result;
+      categories = cats;
+      recipes = recs;
+      isLoading = false;
     });
   }
 
-  void _onSearchChanged(String value) {
+  Future<void> _selectCategory(String category) async {
     setState(() {
-      searchQuery = value;
+      selectedCategory = category;
+      isLoading = true;
     });
-    _loadRecipes();
+    final recs = await ApiService.fetchRecipesByCategory(category);
+    setState(() {
+      recipes = recs;
+      isLoading = false;
+    });
+  }
+
+  void _openDetail(String recipeId) async {
+    final recipe = await ApiService.fetchRecipeById(recipeId);
+    if (recipe != null && context.mounted) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => RecipeDetailScreen(recipe: recipe)),
+      );
+    }
   }
 
   @override
@@ -42,35 +62,44 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(title: const Text('Receptkereső')),
       body: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: TextField(
-              decoration: const InputDecoration(
-                labelText: 'Keresés...',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.search),
-              ),
-              onChanged: _onSearchChanged,
+          SizedBox(
+            height: 60,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              itemCount: categories.length,
+              itemBuilder: (context, index) {
+                final cat = categories[index];
+                final selected = cat == selectedCategory;
+                return ChoiceChip(
+                  label: Text(cat),
+                  selected: selected,
+                  onSelected: (_) => _selectCategory(cat),
+                  selectedColor: Colors.deepOrange,
+                );
+              },
+              separatorBuilder: (_, __) => const SizedBox(width: 8),
             ),
           ),
+          const Divider(),
           Expanded(
-            child: recipes.isEmpty
-                ? const Center(child: Text('Nincs találat...'))
-                : ListView.builder(
+            child: isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : GridView.builder(
+                    padding: const EdgeInsets.all(12),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          mainAxisSpacing: 12,
+                          crossAxisSpacing: 12,
+                          childAspectRatio: 0.75,
+                        ),
                     itemCount: recipes.length,
                     itemBuilder: (context, index) {
                       final recipe = recipes[index];
-                      return RecipeCard(
-                        recipe: recipe,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) =>
-                                  RecipeDetailScreen(recipe: recipe),
-                            ),
-                          );
-                        },
+                      return GestureDetector(
+                        onTap: () => _openDetail(recipe.id),
+                        child: RecipeCard(recipe: recipe),
                       );
                     },
                   ),
