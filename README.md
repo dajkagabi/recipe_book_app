@@ -47,8 +47,6 @@ flutter run
 - Dart– Programozási nyelv
 - Material 3 Design
 
-- 
-
 <img width="295" height="689" alt="Recipe" src="https://github.com/user-attachments/assets/f23bc227-4a17-423a-b461-e86caae4f5e8" />
 <img width="295" height="689" alt="Recipe-2" src="https://github.com/user-attachments/assets/afcf5e30-d024-4764-8796-8002e3e508ab" />
 <img width="295" height="689" alt="Recipe-3" src="https://github.com/user-attachments/assets/c239157b-d4d5-4573-9331-973a0f8369d3" />
